@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"math"
 	"strings"
@@ -8,20 +9,31 @@ import (
 
 func main() {
 
-	key := 3
-	word := "meet me after the party"
-	fmt.Println("LENGTH WORD", len(word))
+	var (
+		word      string
+		key       int
+		isEncrypt bool
+	)
 
-	result := encrypt(key, word)
+	flag.StringVar(&word, "word", "", "word to encrypt or decrypt")
+	flag.IntVar(&key, "key", 0, "depth key")
+	flag.BoolVar(&isEncrypt, "encrypt", false, "true to encrypt default set to false (decrypt)")
 
-	fmt.Println(result)
+	flag.Parse()
 
-	//TODO: Automate this process
-	//	fmt.Println(result[:idx+1])
-	//	fmt.Println(result[idx+1 : (idx+1)*2])
-	//	fmt.Println(result[(idx+1)*2 : ((idx+1)*2)+idx+1])
-	//	fmt.Println(result[((idx+1)*2)+idx+1 : (idx+1)*2+idx+1+idx])
-	decrypt(result, key)
+	if key != 0 && word != "" {
+		switch isEncrypt {
+		case false:
+			fmt.Println(decrypt(word, key))
+			return
+		case true:
+			fmt.Println(encrypt(key, word))
+			return
+		}
+	}
+
+	flag.PrintDefaults()
+	return
 
 }
 
@@ -41,8 +53,6 @@ func encrypt(key int, word string) string {
 		count++
 	}
 
-	fmt.Println("DEBUG", arr)
-
 	var result string
 	for _, n := range arr {
 		result += strings.Join(n, "")
@@ -51,11 +61,9 @@ func encrypt(key int, word string) string {
 	return result
 }
 
-func decrypt(encWord string, key int) {
-	//fmt.Println(encWord)
+func decrypt(encWord string, key int) string {
 
-	idx := len(encWord) / key
-	fmt.Println("IDX", idx)
+	//idx := len(encWord) / key
 	count := 0
 	arr := make([][]string, key)
 
@@ -74,7 +82,7 @@ func decrypt(encWord string, key int) {
 		if count != 0 {
 			//x += (idx + 1)
 			if accum != lastAccum {
-				fmt.Println("NOT", accum, lastAccum)
+				//fmt.Println("NOT", accum, lastAccum)
 				x += (accum + 1)
 			} else {
 				x += accum
@@ -86,15 +94,30 @@ func decrypt(encWord string, key int) {
 		y += accum
 		//int(math.Ceil(float64(len(encWord)-count) / float64(key)))
 		if count != key-1 {
-			fmt.Println(encWord[x:y])
+			//fmt.Println(encWord[x:y])
 			arr[count] = strings.Split(encWord[x:y], "")
 		} else {
-			fmt.Println(encWord[x:])
+			//fmt.Println(encWord[x:])
 			arr[count] = strings.Split(encWord[x:], "")
 		}
 
 		count++
 	}
 
-	fmt.Println("DEBUG", arr)
+	xIndex := 0
+	yIndex := 0
+
+	var result string
+	for _, n := range arr {
+		for _ = range n {
+			if xIndex == key {
+				xIndex = 0
+				yIndex++
+			}
+			result += arr[xIndex][yIndex]
+			xIndex++
+		}
+	}
+
+	return result
 }
